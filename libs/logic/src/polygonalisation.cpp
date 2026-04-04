@@ -1,5 +1,5 @@
 #include "polygonalisation.h"
-#include "line_drawing_algs.h"
+#include "first_rank_lines.h"
 #include "polygon.h"
 #include <algorithm>
 #include <climits>
@@ -151,7 +151,7 @@ void update_alive_dead(edge_vector &alive, edge_vector &dead, const edge &e)
 	}
 }
 
-color_point_vector draw_Delone(const point_vector &pts)
+color_point_vector draw_delaunay(const point_vector &pts)
 {
 	color_point_vector result;
 
@@ -192,7 +192,7 @@ color_point_vector draw_Delone(const point_vector &pts)
 
 	for (const auto &e : dead_edges) {
 		color_point_vector line =
-			draw_CDA(e.first.first, e.first.second, e.second.first,
+			draw_cda(e.first.first, e.first.second, e.second.first,
 				 e.second.second);
 
 		for (const auto &point : line) {
@@ -291,7 +291,7 @@ p_point_vector get_voronoi_cell_for_point(const point &p0,
 	return region;
 }
 
-p_point_vector get_Voronoi_cell_vertexes(const point_vector &pts)
+p_point_vector get_voronoi_cell_vertexes(const point_vector &pts)
 {
 	p_point_vector all_vertices;
 
@@ -337,7 +337,7 @@ p_point_vector get_Voronoi_cell_vertexes(const point_vector &pts)
 	return all_vertices;
 }
 
-color_point_vector draw_Voronoi(const point_vector &pts)
+color_point_vector draw_voronoi(const point_vector &pts)
 {
 	color_point_vector result;
 
@@ -345,7 +345,7 @@ color_point_vector draw_Voronoi(const point_vector &pts)
 		return result;
 	}
 
-	p_point_vector voronoi_vertices = get_Voronoi_cell_vertexes(pts);
+	p_point_vector voronoi_vertices = get_voronoi_cell_vertexes(pts);
 
 	if (voronoi_vertices.empty()) {
 		return result;
@@ -411,7 +411,7 @@ color_point_vector draw_Voronoi(const point_vector &pts)
 
 	for (const auto &edge : unique_edges) {
 		color_point_vector line =
-			draw_CDA(std::round(edge.first.first),
+			draw_cda(std::round(edge.first.first),
 				 std::round(edge.first.second),
 				 std::round(edge.second.first),
 				 std::round(edge.second.second));

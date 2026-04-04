@@ -1,5 +1,5 @@
 #include "polygon.h"
-#include "line_drawing_algs.h"
+#include "first_rank_lines.h"
 #include <algorithm>
 #include <cmath>
 
@@ -226,7 +226,7 @@ color_point_vector draw_convex_polygon(point_vector vertices)
 		const auto &next = vertices[(i + 1) % vertices.size()];
 
 		std::vector<std::tuple<int, int, double> > line_points =
-			draw_CDA(current.first, current.second, next.first,
+			draw_cda(current.first, current.second, next.first,
 				 next.second);
 
 		all_points.insert(all_points.end(), line_points.begin(),
@@ -234,93 +234,4 @@ color_point_vector draw_convex_polygon(point_vector vertices)
 	}
 
 	return all_points;
-}
-
-bool is_point_inside_polygon(const point_vector &point,
-			     const point_vector &polygon)
-{
-	if (point.size() != 1 || polygon.size() < 3)
-		return false;
-
-	int x = point[0].first;
-	int y = point[0].second;
-
-	bool inside = false;
-	int n = polygon.size();
-
-	for (int i = 0, j = n - 1; i < n; j = i++) {
-		int xi = polygon[i].first;
-		int yi = polygon[i].second;
-		int xj = polygon[j].first;
-		int yj = polygon[j].second;
-
-		bool intersect =
-			((yi > y) != (yj > y)) &&
-			(x < (xj - xi) * (y - yi) / (double)(yj - yi) + xi);
-
-		if (intersect)
-			inside = !inside;
-	}
-
-	return inside;
-}
-
-color_point_vector get_line_polygon_intersections(const point_vector &line,
-						  const point_vector &polygon)
-{
-	color_point_vector intersections;
-
-	if (line.size() != 2 || polygon.size() < 3)
-		return intersections;
-
-	int x1 = line[0].first;
-	int y1 = line[0].second;
-	int x2 = line[1].first;
-	int y2 = line[1].second;
-
-	color_point_vector line_points = draw_CDA(x1, y1, x2, y2);
-	intersections = line_points;
-
-	int n = polygon.size();
-
-	for (size_t k = 0; k < line_points.size(); k++) {
-		int x = std::get<0>(line_points[k]);
-		int y = std::get<1>(line_points[k]);
-
-		for (int i = 0; i < n; i++) {
-			int j = (i + 1) % n;
-
-			int x3 = polygon[i].first;
-			int y3 = polygon[i].second;
-			int x4 = polygon[j].first;
-			int y4 = polygon[j].second;
-
-			double denom =
-				(x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
-
-			if (denom == 0)
-				continue;
-
-			double t = ((x1 - x3) * (y3 - y4) -
-				    (y1 - y3) * (x3 - x4)) /
-				   denom;
-			double u = -((x1 - x2) * (y1 - y3) -
-				     (y1 - y2) * (x1 - x3)) /
-				   denom;
-
-			if (t >= 0 && t <= 1 && u >= 0 && u <= 1) {
-				int ix = x1 + t * (x2 - x1);
-				int iy = y1 + t * (y2 - y1);
-
-				if (std::abs(ix - x) < 2 &&
-				    std::abs(iy - y) < 2) {
-					intersections[k] =
-						std::make_tuple(ix, iy, 0.5);
-					break;
-				}
-			}
-		}
-	}
-
-	return intersections;
 }

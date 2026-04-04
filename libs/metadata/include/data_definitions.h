@@ -94,11 +94,12 @@ class Figure {
 	const std::vector<Point> &get_connected_points() const;
 
 	void invalidate_cache() const;
-	void add_point(const Point pt);
+	virtual bool add_and_validate_point(const Point &pt) = 0;
 
     protected:
-	virtual std::vector<Point>
-	connect_figure_points(std::vector<Point> &points) const = 0;
+	void add_point(const Point &pt);
+	virtual void
+	connect_figure_points(std::vector<Point> &cache_points) const = 0;
 
     private:
 	uint16_t id;
@@ -107,4 +108,149 @@ class Figure {
 	mutable bool is_cache_valid;
 	mutable std::vector<Point> connected_points_cache;
 };
+
+class CDAFigure : public Figure {
+    public:
+	virtual bool add_and_validate_point(const Point &pt) override;
+
+    protected:
+	void
+	connect_figure_points(std::vector<Point> &cache_points) const override;
+};
+
+class BresenhamFigure : public Figure {
+    public:
+	virtual bool add_and_validate_point(const Point &pt) override;
+
+    protected:
+	void
+	connect_figure_points(std::vector<Point> &cache_points) const override;
+};
+
+class WuFigure : public Figure {
+    public:
+	virtual bool add_and_validate_point(const Point &pt) override;
+
+    protected:
+	void
+	connect_figure_points(std::vector<Point> &cache_points) const override;
+};
+
+class CircleFigure : public Figure {
+    public:
+	virtual bool add_and_validate_point(const Point &pt) override;
+
+    protected:
+	void
+	connect_figure_points(std::vector<Point> &cache_points) const override;
+};
+
+class EllipseFigure : public Figure {
+    public:
+	virtual bool add_and_validate_point(const Point &pt) override;
+
+    protected:
+	void
+	connect_figure_points(std::vector<Point> &cache_points) const override;
+};
+
+class ParabolaFigure : public Figure {
+    public:
+	virtual bool add_and_validate_point(const Point &pt) override;
+
+    protected:
+	void
+	connect_figure_points(std::vector<Point> &cache_points) const override;
+};
+
+class HyperbolaFigure : public Figure {
+    public:
+	virtual bool add_and_validate_point(const Point &pt) override;
+
+    protected:
+	void
+	connect_figure_points(std::vector<Point> &cache_points) const override;
+};
+
+class HermiteFigure : public Figure {
+    public:
+	virtual bool add_and_validate_point(const Point &pt) override;
+
+    protected:
+	void
+	connect_figure_points(std::vector<Point> &cache_points) const override;
+};
+
+class BezierFigure : public Figure {
+    public:
+	virtual bool add_and_validate_point(const Point &pt) override;
+
+    protected:
+	void
+	connect_figure_points(std::vector<Point> &cache_points) const override;
+};
+
+class BSplineFigure : public Figure {
+    public:
+	virtual bool add_and_validate_point(const Point &pt) override;
+
+    protected:
+	void
+	connect_figure_points(std::vector<Point> &cache_points) const override;
+};
+
+class CubeFigure : public Figure {
+    public:
+	virtual bool add_and_validate_point(const Point &pt) override;
+
+    protected:
+	void
+	connect_figure_points(std::vector<Point> &cache_points) const override;
+};
+
+class TetrahedronFigure : public Figure {
+    public:
+	virtual bool add_and_validate_point(const Point &pt) override;
+
+    protected:
+	void
+	connect_figure_points(std::vector<Point> &cache_points) const override;
+};
+
+class PolygonFigure : public Figure {
+    public:
+	virtual bool add_and_validate_point(const Point &pt) override;
+
+    protected:
+	void
+	connect_figure_points(std::vector<Point> &cache_points) const override;
+};
+
+class ConvexPolygonFigure : public Figure {
+    public:
+	virtual bool add_and_validate_point(const Point &pt) override;
+
+    protected:
+	void
+	connect_figure_points(std::vector<Point> &cache_points) const override;
+};
+
+class DelaunayFigure : public Figure {
+    public:
+	virtual bool add_and_validate_point(const Point &pt) override;
+
+    protected:
+	void
+	connect_figure_points(std::vector<Point> &cache_points) const override;
+};
+
+class VoronoiFigure : public Figure {
+    public:
+	virtual bool add_and_validate_point(const Point &pt) override;
+
+    protected:
+	void
+	connect_figure_points(std::vector<Point> &cache_points) const override;
+};
+
 } // AlgorithmicEditor

@@ -1,4 +1,4 @@
-#include "obj_3D.h"
+#include "transformations.h"
 #include <cmath>
 
 double to_radians(double degrees)
@@ -153,9 +153,9 @@ void rotation_z_matrix_row_major(double matrix[4][4], double angle_deg)
 	matrix[3][3] = 1.0;
 }
 
-tuple_vector rotate_3D_around_center(tuple_vector pts, double center_x,
-				     double center_y, double center_z,
-				     char axis, double angle_deg)
+tuple_vector rotate_around_center(tuple_vector pts, double center_x,
+				  double center_y, double center_z, char axis,
+				  double angle_deg)
 {
 	if (pts.empty())
 		return pts;
@@ -201,8 +201,8 @@ tuple_vector rotate_3D_around_center(tuple_vector pts, double center_x,
 	return result;
 }
 
-tuple_vector rotate_3D(tuple_vector pts, char axis, bool use_center,
-		       std::tuple<double, double, double> center)
+tuple_vector rotate_figure(tuple_vector pts, char axis, bool use_center,
+			   std::tuple<double, double, double> center)
 {
 	if (pts.empty())
 		return pts;
@@ -220,8 +220,8 @@ tuple_vector rotate_3D(tuple_vector pts, char axis, bool use_center,
 		center_z = z1;
 	}
 
-	return rotate_3D_around_center(pts, center_x, center_y, center_z, axis,
-				       ROTATE_ANGLE);
+	return rotate_around_center(pts, center_x, center_y, center_z, axis,
+				    ROTATE_ANGLE);
 }
 
 void scale_matrix_row_major(double matrix[4][4], double sx, double sy,
@@ -281,8 +281,8 @@ tuple_vector scale_around_center(tuple_vector pts, double center_x,
 	return result;
 }
 
-tuple_vector scale(tuple_vector pts, char method, bool use_center,
-		   std::tuple<double, double, double> center)
+tuple_vector scale_figure(tuple_vector pts, char method, bool use_center,
+			  std::tuple<double, double, double> center)
 {
 	if (pts.empty())
 		return pts;
@@ -324,8 +324,8 @@ tuple_vector scale(tuple_vector pts, char method, bool use_center,
 				   sz);
 }
 
-tuple_vector perspective(tuple_vector pts, bool use_center,
-			 std::tuple<double, double, double> center)
+tuple_vector perspective_figure(tuple_vector pts, bool use_center,
+				std::tuple<double, double, double> center)
 {
 	if (pts.empty())
 		return pts;
@@ -370,7 +370,7 @@ tuple_vector perspective(tuple_vector pts, bool use_center,
 	return result;
 }
 
-tuple_vector move_fig(tuple_vector pts, char direction)
+tuple_vector move_figure(tuple_vector pts, char direction)
 {
 	if (pts.empty())
 		return pts;

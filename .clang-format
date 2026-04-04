@@ -751,10 +751,14 @@ ForEachMacros:
   - "zorro_for_each_dev"
   - "zpci_bus_for_each"
 
-IncludeBlocks: Preserve
+IncludeBlocks: Regroup
 IncludeCategories:
-  - Regex: ".*"
+  - Regex: '^".*"'
     Priority: 1
+  - Regex: "^<.*>"
+    Priority: 2
+  - Regex: ".*"
+    Priority: 99
 IncludeIsMainRegex: "(Test)?$"
 IndentCaseLabels: false
 IndentGotoLabels: false
