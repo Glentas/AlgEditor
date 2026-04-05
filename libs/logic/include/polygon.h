@@ -1,12 +1,11 @@
 #pragma once
-#include <tuple>
-#include <utility>
+
+#include "data_definitions.h"
 #include <vector>
 
-typedef std::vector<std::pair<int, int> > point_vector;
-typedef std::vector<std::tuple<int, int, double> > color_point_vector;
+using AlgorithmicEditor::Point;
 
-bool is_convex(const point_vector &points);
-point_vector graham_scan(const point_vector &points);
-color_point_vector draw_convex_polygon(point_vector vertices);
-color_point_vector get_convex_hull_points(const point_vector &vertices);
+bool is_convex(const std::vector<Point> &points);
+std::vector<Point> graham_scan(const std::vector<Point> &points);
+std::vector<Point> draw_convex_polygon(std::vector<Point> vertices);
+std::vector<Point> get_convex_hull_points(const std::vector<Point> &vertices);

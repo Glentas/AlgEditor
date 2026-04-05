@@ -1,39 +1,47 @@
 #pragma once
-#include "vars.h"
+#include "data_definitions.h"
+
 #include <QMouseEvent>
 #include <QObject>
 #include <QPaintEvent>
 #include <QWidget>
 #include <vector>
 
-class Canvas : public QWidget {
-	Q_OBJECT
-    public:
-	explicit Canvas(QWidget *parent = nullptr, bool is_grid = true,
-			int pixel_size = CELL);
-	~Canvas();
+namespace AlgorithmicEditor
+{
+class Canvas : public QWidget
+{
+    Q_OBJECT
+  public:
+    explicit Canvas(QWidget *parent = nullptr, bool is_grid = true,
+                    int pixel_size = Config::CELL_SIZE);
+    ~Canvas();
 
-	void set_px_size(int size);
-	void set_show_grid(bool grid);
-	void set_pixel(Point px);
-	void set_locked(bool lock);
+    void set_pixel_size(int size);
+    void set_grid_visibilty(bool grid);
+    void set_locked(bool is_locked);
 
-	int get_px_size() const;
+    int get_pixel_size() const;
+    bool get_grid_visibilty() const;
+    bool get_locked() const;
 
-    public slots:
-	void on_clear();
-	void on_grid_show();
+    void add_pixel(Point px);
 
-    signals:
-	void clicked_px(Point pt);
+  public slots:
+    void on_clear();
+    void on_grid_show();
 
-    protected:
-	void paintEvent(QPaintEvent *) override;
-	void mousePressEvent(QMouseEvent *event) override;
+  signals:
+    void click_on_pixel(Point p);
 
-    private:
-	bool show_grid;
-	bool locked;
-	int px_size;
-	std::vector<Point> pixels;
+  protected:
+    void paintEvent(QPaintEvent *) override;
+    void mousePressEvent(QMouseEvent *event) override;
+
+  private:
+    bool show_grid;
+    bool is_locked;
+    int pixel_size;
+    std::vector<Point> pixels;
 };
+} // namespace AlgorithmicEditor

@@ -1,35 +1,28 @@
 #pragma once
 #include "polygon.h"
-#include <tuple>
 #include <vector>
+#include "data_definitions.h"
 
-typedef std::pair<int, int> point;
-typedef std::pair<point, point> edge;
-typedef std::vector<point> point_vector;
-typedef std::vector<edge> edge_vector;
+using AlgorithmicEditor::Point;
 
-typedef std::pair<float, float> p_point;
-typedef std::pair<p_point, p_point> p_edge;
-typedef std::vector<p_point> p_point_vector;
-typedef std::vector<p_edge> p_edge_vector;
+using Edge = std::pair<Point, Point>;
+using EdgeVector = std::vector<Edge>;
 
-typedef std::vector<std::tuple<int, int, double> > color_point_vector;
+Edge get_start_edge(const std::vector<Point> &pts);
+bool circle_from_3_Points(const Point &p1, const Point &p2, const Point &p3,
+			  Point &center, float &radius);
+std::vector<Point> get_oncircle_Points(const Edge &e,
+				       const std::vector<Point> &pts);
+void update_alive_dead(EdgeVector &alive, EdgeVector &dead, const Edge &a);
+std::vector<Point> draw_delaunay(const std::vector<Point> &pts);
 
-edge get_start_edge(const point_vector &pts);
-bool circle_from_3_points(const point &p1, const point &p2, const point &p3,
-			  std::pair<float, float> &center, float &radius);
-point_vector get_oncircle_points(const edge &e, const point_vector &pts);
-void update_alive_dead(edge_vector &alive, edge_vector &dead, const edge &a);
-color_point_vector draw_delaunay(const point_vector &pts);
-
-p_point_vector get_bounding_box(const p_point &min_xy, const p_point &max_xy);
-p_point_vector intersect_half_plane(const p_point_vector &current_region,
-				    const point &p0, const point &p1,
-				    const p_point &min_xy,
-				    const p_point &max_xy);
-p_point_vector get_voronoi_cell_for_point(const point &p0,
-					  const point_vector &pts,
-					  const p_point &min_xy,
-					  const p_point &max_xy);
-p_point_vector get_voronoi_cell_vertexes(const point_vector &pts);
-color_point_vector draw_voronoi(const point_vector &pts);
+std::vector<Point> get_bounding_box(const Point &min_xy, const Point &max_xy);
+std::vector<Point>
+intersect_half_plane(const std::vector<Point> &current_region, const Point &p0,
+		     const Point &p1, const Point &min_xy, const Point &max_xy);
+std::vector<Point> get_voronoi_cell_for_Point(const Point &p0,
+					      const std::vector<Point> &pts,
+					      const Point &min_xy,
+					      const Point &max_xy);
+std::vector<Point> get_voronoi_cell_vertexes(const std::vector<Point> &pts);
+std::vector<Point> draw_voronoi(const std::vector<Point> &pts);

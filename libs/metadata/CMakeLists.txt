@@ -1,7 +1,6 @@
 add_library(metadata 
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/vars.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/data_definitions.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/misc.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/figure_class.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/tools.cpp
 )
 

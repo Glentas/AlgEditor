@@ -1,25 +1,29 @@
 #include "transformations.h"
+#include "data_definitions.h"
+#include <vector>
 #include <cmath>
+
+using AlgorithmicEditor::Point;
 
 double to_radians(double degrees)
 {
 	return degrees * M_PI / 180.0;
 }
 
-std::tuple<double, double, double> find_center(const tuple_vector &pts)
+Point find_center(const std::vector<Point> &pts)
 {
 	if (pts.empty())
-		return std::make_tuple(0.0, 0.0, 0.0);
+		return { 0.0, 0.0, 0.0, 0 };
 
 	double sum_x = 0.0, sum_y = 0.0, sum_z = 0.0;
 	for (const auto &pt : pts) {
-		sum_x += std::get<0>(pt);
-		sum_y += std::get<1>(pt);
-		sum_z += std::get<2>(pt);
+		sum_x += pt.x;
+		sum_y += pt.y;
+		sum_z += pt.z;
 	}
 
 	double count = static_cast<double>(pts.size());
-	return std::make_tuple(sum_x / count, sum_y / count, sum_z / count);
+	return { sum_x / count, sum_y / count, sum_z / count, 0 };
 }
 
 void multiply_matrices_row_major(double result[4][4], const double a[4][4],
@@ -153,9 +157,9 @@ void rotation_z_matrix_row_major(double matrix[4][4], double angle_deg)
 	matrix[3][3] = 1.0;
 }
 
-tuple_vector rotate_around_center(tuple_vector pts, double center_x,
-				  double center_y, double center_z, char axis,
-				  double angle_deg)
+std::vector<Point> rotate_around_center(std::vector<Point> pts, double center_x,
+					double center_y, double center_z,
+					char axis, double angle_deg)
 {
 	if (pts.empty())
 		return pts;
@@ -187,37 +191,36 @@ tuple_vector rotate_around_center(tuple_vector pts, double center_x,
 	multiply_matrices_row_major(temp, T1, R);
 	multiply_matrices_row_major(M, temp, T2);
 
-	tuple_vector result;
+	std::vector<Point> result;
 	for (const auto &pt : pts) {
-		double x = std::get<0>(pt);
-		double y = std::get<1>(pt);
-		double z = std::get<2>(pt);
+		double x = pt.x;
+		double y = pt.y;
+		double z = pt.z;
 
 		apply_matrix_to_point_row_major(M, x, y, z);
 
-		result.push_back(std::make_tuple(x, y, z));
+		result.push_back({ x, y, z, 0 });
 	}
 
 	return result;
 }
 
-tuple_vector rotate_figure(tuple_vector pts, char axis, bool use_center,
-			   std::tuple<double, double, double> center)
+std::vector<Point> rotate_figure(std::vector<Point> pts, char axis,
+				 bool use_center, Point center)
 {
 	if (pts.empty())
 		return pts;
 
 	double center_x, center_y, center_z;
 	if (use_center) {
-		auto [x1, y1, z1] = center;
-		center_x = x1;
-		center_y = y1;
-		center_z = z1;
+		center_x = center.x;
+		center_y = center.y;
+		center_z = center.z;
 	} else {
-		auto [x1, y1, z1] = find_center(pts);
-		center_x = x1;
-		center_y = y1;
-		center_z = z1;
+		Point c = find_center(pts);
+		center_x = c.x;
+		center_y = c.y;
+		center_z = c.z;
 	}
 
 	return rotate_around_center(pts, center_x, center_y, center_z, axis,
@@ -245,9 +248,9 @@ void scale_matrix_row_major(double matrix[4][4], double sx, double sy,
 	matrix[3][3] = 1.0;
 }
 
-tuple_vector scale_around_center(tuple_vector pts, double center_x,
-				 double center_y, double center_z, double sx,
-				 double sy, double sz)
+std::vector<Point> scale_around_center(std::vector<Point> pts, double center_x,
+				       double center_y, double center_z,
+				       double sx, double sy, double sz)
 {
 	if (pts.empty())
 		return pts;
@@ -267,37 +270,36 @@ tuple_vector scale_around_center(tuple_vector pts, double center_x,
 	multiply_matrices_row_major(temp, T1, S);
 	multiply_matrices_row_major(M, temp, T2);
 
-	tuple_vector result;
+	std::vector<Point> result;
 	for (const auto &pt : pts) {
-		double x = std::get<0>(pt);
-		double y = std::get<1>(pt);
-		double z = std::get<2>(pt);
+		double x = pt.x;
+		double y = pt.y;
+		double z = pt.z;
 
 		apply_matrix_to_point_row_major(M, x, y, z);
 
-		result.push_back(std::make_tuple(x, y, z));
+		result.push_back({ x, y, z, 0 });
 	}
 
 	return result;
 }
 
-tuple_vector scale_figure(tuple_vector pts, char method, bool use_center,
-			  std::tuple<double, double, double> center)
+std::vector<Point> scale_figure(std::vector<Point> pts, char method,
+				bool use_center, Point center)
 {
 	if (pts.empty())
 		return pts;
 
 	double center_x, center_y, center_z;
 	if (use_center) {
-		auto [x1, y1, z1] = center;
-		center_x = x1;
-		center_y = y1;
-		center_z = z1;
+		center_x = center.x;
+		center_y = center.y;
+		center_z = center.z;
 	} else {
-		auto [x1, y1, z1] = find_center(pts);
-		center_x = x1;
-		center_y = y1;
-		center_z = z1;
+		Point c = find_center(pts);
+		center_x = c.x;
+		center_y = c.y;
+		center_z = c.z;
 	}
 
 	double sx, sy, sz;
@@ -324,53 +326,7 @@ tuple_vector scale_figure(tuple_vector pts, char method, bool use_center,
 				   sz);
 }
 
-tuple_vector perspective_figure(tuple_vector pts, bool use_center,
-				std::tuple<double, double, double> center)
-{
-	if (pts.empty())
-		return pts;
-
-	double center_x, center_y, center_z;
-	if (use_center) {
-		auto [x1, y1, z1] = center;
-		center_x = x1;
-		center_y = y1;
-		center_z = z1;
-	} else {
-		auto [x1, y1, z1] = find_center(pts);
-		center_x = x1;
-		center_y = y1;
-		center_z = z1;
-	}
-
-	tuple_vector result;
-
-	for (const auto &pt : pts) {
-		double x = std::get<0>(pt);
-		double y = std::get<1>(pt);
-		double z = std::get<2>(pt);
-
-		double tx = x - center_x;
-		double ty = y - center_y;
-		double tz = z - center_z;
-
-		double denominator = 1.0 + tz / PERSPECTIVE_FACTOR;
-
-		if (fabs(denominator) < 0.1) {
-			denominator = (denominator >= 0) ? 0.1 : -0.1;
-		}
-
-		double px = tx / denominator;
-		double py = ty / denominator;
-		double pz = tz;
-		result.push_back(std::make_tuple(px + center_x, py + center_y,
-						 pz + center_z));
-	}
-
-	return result;
-}
-
-tuple_vector move_figure(tuple_vector pts, char direction)
+std::vector<Point> move_figure(std::vector<Point> pts, char direction)
 {
 	if (pts.empty())
 		return pts;
@@ -395,13 +351,13 @@ tuple_vector move_figure(tuple_vector pts, char direction)
 		return pts;
 	}
 
-	tuple_vector result;
+	std::vector<Point> result;
 	for (const auto &pt : pts) {
-		double x = std::get<0>(pt) + dx;
-		double y = std::get<1>(pt) + dy;
-		double z = std::get<2>(pt);
+		double x = pt.x + dx;
+		double y = pt.y + dy;
+		double z = pt.z;
 
-		result.push_back(std::make_tuple(x, y, z));
+		result.push_back({ x, y, z, 0 });
 	}
 
 	return result;

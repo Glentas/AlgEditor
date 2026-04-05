@@ -1,5 +1,7 @@
 #include "canvas.h"
-#include "vars.h"
+
+#include "data_definitions.h"
+
 #include <QInputDialog>
 #include <QMouseEvent>
 #include <QObject>
@@ -11,129 +13,129 @@
 #include <iostream>
 #include <vector>
 
+namespace AlgorithmicEditor
+{
 Canvas::Canvas(QWidget *parent, bool is_grid, int pixel_size)
-	: QWidget(parent)
-	, show_grid(is_grid)
-	, px_size(pixel_size)
-	, pixels({})
-	, locked(false)
+    : QWidget(parent), show_grid(is_grid), pixel_size(pixel_size), pixels({}),
+      is_locked(false)
 {
-	this->set_px_size(pixel_size);
+    this->set_pixel_size(pixel_size);
 }
 
-Canvas::~Canvas()
-{
-	std::cout << "Canvas out...\n";
-}
+Canvas::~Canvas() { std::cout << "Canvas out...\n"; }
 
-int Canvas::get_px_size() const
+void Canvas::set_pixel_size(int size)
 {
-	return this->px_size;
-}
+    if (size < 1 || size > 2 * Config::CELL_SIZE) {
+        return;
+    }
 
-void Canvas::set_locked(bool lock)
-{
-	this->locked = lock;
+    this->pixel_size = size;
+    this->setFixedSize(Config::CANVAS_SIZE * this->pixel_size,
+                       Config::CANVAS_SIZE * this->pixel_size);
+    this->update();
 }
-
-void Canvas::set_px_size(int size)
+void Canvas::set_grid_visibilty(bool grid)
 {
-	if (size >= 1 && size <= 2 * CELL) {
-		this->px_size = size;
-		this->setFixedSize(CANVAS_SIZE * this->px_size,
-				   CANVAS_SIZE * this->px_size);
-		this->update();
-	}
+    this->show_grid = grid;
+    this->update();
 }
+void Canvas::set_locked(bool lock) { this->is_locked = lock; }
 
-void Canvas::set_show_grid(bool grid)
-{
-	this->show_grid = grid;
-	this->update();
-}
+int Canvas::get_pixel_size() const { return this->pixel_size; }
+bool Canvas::get_grid_visibilty() const { return this->show_grid; }
+bool Canvas::get_locked() const { return this->is_locked; }
 
-void Canvas::set_pixel(Point px)
+void Canvas::add_pixel(Point px)
 {
-	if (px.x >= 0 && px.x <= CANVAS_SIZE - 1 && px.y >= 0 &&
-	    px.y <= CANVAS_SIZE - 1) {
-		this->pixels.push_back(px);
-		this->update();
-	}
+    if (px.x < 0 || px.x > Config::CANVAS_SIZE - 1 || px.y < 0 ||
+        px.y > Config::CANVAS_SIZE - 1) {
+        return;
+    }
+    this->pixels.push_back(px);
+    this->update();
 }
 
 void Canvas::paintEvent(QPaintEvent *)
 {
-	QPainter p(this);
-	p.fillRect(this->rect(), Qt::white);
+    QPainter p(this);
+    p.fillRect(this->rect(), Qt::white);
 
-	QPen pen(Qt::lightGray, 1, Qt::SolidLine);
-	QPen pen2(Qt::black, 1, Qt::SolidLine);
-	p.setPen(pen);
+    QPen grey_pen(Qt::lightGray, 1, Qt::SolidLine);
+    QPen black_pen(Qt::black, 1, Qt::SolidLine);
+    p.setPen(grey_pen);
 
-	if (this->px_size > 1 && this->show_grid == true) {
-		int step = this->px_size;
+    if (this->pixel_size > 1 && this->show_grid == true) {
+        int step = this->pixel_size;
 
-		for (int x = 0; x <= this->width(); x += step) {
-			if (x % (10 * step) == 0) {
-				p.setPen(pen2);
-				p.drawLine(x, 0, x, this->height());
-				p.setPen(pen);
-			} else {
-				p.drawLine(x, 0, x, this->height());
-			}
-		}
+        for (int x = 0; x <= this->width(); x += step) {
+            if (x % (10 * step) == 0) {
+                p.setPen(black_pen);
+                p.drawLine(x, 0, x, this->height());
+                p.setPen(grey_pen);
+            } else {
+                p.drawLine(x, 0, x, this->height());
+            }
+        }
 
-		for (int y = 0; y <= this->height(); y += step) {
-			if (y % (10 * step) == 0) {
-				p.setPen(pen2);
-				p.drawLine(0, y, this->width(), y);
-				p.setPen(pen);
-			} else {
-				p.drawLine(0, y, this->width(), y);
-			}
-		}
-	}
+        for (int y = 0; y <= this->height(); y += step) {
+            if (y % (10 * step) == 0) {
+                p.setPen(black_pen);
+                p.drawLine(0, y, this->width(), y);
+                p.setPen(grey_pen);
+            } else {
+                p.drawLine(0, y, this->width(), y);
+            }
+        }
+    }
 
-	int side = this->px_size > 1 ? this->px_size - 1 : 1;
-	for (auto px : this->pixels) {
-		int x = this->px_size > 1 ? px.x * this->px_size + 1 : px.x;
-		int y = this->px_size > 1 ? px.y * this->px_size + 1 : px.y;
-		QColor col(px.r, px.g, px.b);
-		p.fillRect(x, y, side, side, col);
-	}
+    p.setPen(black_pen);
+
+    int side = this->pixel_size > 1 ? this->pixel_size - 1 : 1;
+    for (auto px : this->pixels) {
+        int x = this->pixel_size > 1 ? px.x_int() * this->pixel_size + 1
+                                     : px.x_int();
+        int y = this->pixel_size > 1 ? px.y_int() * this->pixel_size + 1
+                                     : px.y_int();
+        QColor col(px.r, px.g, px.b);
+        p.fillRect(x, y, side, side, col);
+    }
 }
 
 void Canvas::on_clear()
 {
-	this->pixels.clear();
-	this->update();
+    this->pixels.clear();
+    this->update();
 }
 
 void Canvas::on_grid_show()
 {
-	if (this->show_grid == true) {
-		this->set_show_grid(false);
-	} else {
-		this->set_show_grid(true);
-	}
+    if (this->show_grid == true) {
+        this->set_grid_visibilty(false);
+    } else {
+        this->set_grid_visibilty(true);
+    }
 }
 
 void Canvas::mousePressEvent(QMouseEvent *event)
 {
-	if (event->button() == Qt::LeftButton && this->locked == false) {
-		int widgetX = event->pos().x();
-		int widgetY = event->pos().y();
+    if (event->button() == Qt::LeftButton && this->is_locked == false) {
+        int widget_x = event->pos().x();
+        int widget_y = event->pos().y();
 
-		int gridX = widgetX / this->px_size;
-		int gridY = widgetY / this->px_size;
+        int grid_x = widget_x / this->pixel_size;
+        int grid_y = widget_y / this->pixel_size;
 
-		if (gridX >= 0 && gridX < CANVAS_SIZE && gridY >= 0 &&
-		    gridY < CANVAS_SIZE) {
-			Point px(gridX, gridY, 255, 64, 64);
+        if (grid_x >= 0 && grid_x < Config::CANVAS_SIZE && grid_y >= 0 &&
+            grid_y < Config::CANVAS_SIZE) {
+            Point px = {static_cast<double>(grid_x),
+                        static_cast<double>(grid_y), 255, 64, 64};
 
-			this->set_pixel(px);
+            this->add_pixel(px);
 
-			emit this->clicked_px(px);
-		}
-	}
+            emit this->click_on_pixel(px);
+        }
+    }
 }
+
+} // namespace AlgorithmicEditor

@@ -2,8 +2,12 @@
 #include "first_rank_lines.h"
 #include <algorithm>
 #include <cmath>
+#include "data_definitions.h"
+#include <vector>
 
-bool is_convex(const point_vector &points)
+using AlgorithmicEditor::Point;
+
+bool is_convex(const std::vector<Point> &points)
 {
 	if (points.size() < 3)
 		return false;
@@ -12,12 +16,12 @@ bool is_convex(const point_vector &points)
 	int sign = 0;
 
 	for (int i = 0; i < n; i++) {
-		int x1 = points[i].first;
-		int y1 = points[i].second;
-		int x2 = points[(i + 1) % n].first;
-		int y2 = points[(i + 1) % n].second;
-		int x3 = points[(i + 2) % n].first;
-		int y3 = points[(i + 2) % n].second;
+		int x1 = points[i].x_int();
+		int y1 = points[i].y_int();
+		int x2 = points[(i + 1) % n].x_int();
+		int y2 = points[(i + 1) % n].y_int();
+		int x3 = points[(i + 2) % n].x_int();
+		int y3 = points[(i + 2) % n].y_int();
 
 		int v1x = x2 - x1;
 		int v1y = y2 - y1;
@@ -57,19 +61,19 @@ double calculate_polar_angle(int base_x, int base_y, int x, int y)
 	return angle;
 }
 
-point_vector jarvis_march(const point_vector &points)
+std::vector<Point> jarvis_march(const std::vector<Point> &points)
 {
 	if (points.size() < 3)
 		return points;
 
 	int leftmost_idx = 0;
 	for (size_t i = 1; i < points.size(); i++) {
-		if (points[i].first < points[leftmost_idx].first) {
+		if (points[i].x < points[leftmost_idx].x) {
 			leftmost_idx = i;
 		}
 	}
 
-	point_vector hull;
+	std::vector<Point> hull;
 	int current_idx = leftmost_idx;
 
 	do {
@@ -82,10 +86,10 @@ point_vector jarvis_march(const point_vector &points)
 			const auto &p2 = points[next_idx];
 			const auto &p3 = points[i];
 
-			int v1x = p2.first - p1.first;
-			int v1y = p2.second - p1.second;
-			int v2x = p3.first - p1.first;
-			int v2y = p3.second - p1.second;
+			int v1x = p2.x_int() - p1.x_int();
+			int v1y = p2.y_int() - p1.y_int();
+			int v2x = p3.x_int() - p1.x_int();
+			int v2y = p3.y_int() - p1.y_int();
 
 			int cross = v1x * v2y - v1y * v2x;
 
@@ -93,15 +97,15 @@ point_vector jarvis_march(const point_vector &points)
 				next_idx = i;
 			} else if (cross == 0) {
 				int dist_to_next =
-					(p2.first - p1.first) *
-						(p2.first - p1.first) +
-					(p2.second - p1.second) *
-						(p2.second - p1.second);
+					(p2.x_int() - p1.x_int()) *
+						(p2.x_int() - p1.x_int()) +
+					(p2.y_int() - p1.y_int()) *
+						(p2.y_int() - p1.y_int());
 				int dist_to_candidate =
-					(p3.first - p1.first) *
-						(p3.first - p1.first) +
-					(p3.second - p1.second) *
-						(p3.second - p1.second);
+					(p3.x_int() - p1.x_int()) *
+						(p3.x_int() - p1.x_int()) +
+					(p3.y_int() - p1.y_int()) *
+						(p3.y_int() - p1.y_int());
 				if (dist_to_candidate > dist_to_next) {
 					next_idx = i;
 				}
@@ -115,21 +119,21 @@ point_vector jarvis_march(const point_vector &points)
 	return hull;
 }
 
-point_vector graham_scan(const point_vector &points)
+std::vector<Point> graham_scan(const std::vector<Point> &points)
 {
 	if (points.size() < 3)
 		return points;
 
 	int min_y_idx = 0;
 	for (size_t i = 1; i < points.size(); i++) {
-		if (points[i].second < points[min_y_idx].second ||
-		    (points[i].second == points[min_y_idx].second &&
-		     points[i].first < points[min_y_idx].first)) {
+		if (points[i].y < points[min_y_idx].y ||
+		    (points[i].y == points[min_y_idx].y &&
+		     points[i].x < points[min_y_idx].x)) {
 			min_y_idx = i;
 		}
 	}
 
-	point_vector sorted_points;
+	std::vector<Point> sorted_points;
 	sorted_points.push_back(points[min_y_idx]);
 	for (size_t i = 0; i < points.size(); i++) {
 		if (i != min_y_idx) {
@@ -139,28 +143,23 @@ point_vector graham_scan(const point_vector &points)
 
 	auto p0 = sorted_points[0];
 	std::sort(sorted_points.begin() + 1, sorted_points.end(),
-		  [&p0](const std::pair<int, int> &a,
-			const std::pair<int, int> &b) {
-			  double angle_a = calculate_polar_angle(
-				  p0.first, p0.second, a.first, a.second);
-			  double angle_b = calculate_polar_angle(
-				  p0.first, p0.second, b.first, b.second);
+		  [&p0](const Point &a, const Point &b) {
+			  double angle_a =
+				  calculate_polar_angle(p0.x, p0.y, a.x, a.y);
+			  double angle_b =
+				  calculate_polar_angle(p0.x, p0.y, b.x, b.y);
 
 			  if (angle_a == angle_b) {
-				  int dist_a = (a.first - p0.first) *
-						       (a.first - p0.first) +
-					       (a.second - p0.second) *
-						       (a.second - p0.second);
-				  int dist_b = (b.first - p0.first) *
-						       (b.first - p0.first) +
-					       (b.second - p0.second) *
-						       (b.second - p0.second);
+				  double dist_a = (a.x - p0.x) * (a.x - p0.x) +
+						  (a.y - p0.y) * (a.y - p0.y);
+				  double dist_b = (b.x - p0.x) * (b.x - p0.x) +
+						  (b.y - p0.y) * (b.y - p0.y);
 				  return dist_a < dist_b;
 			  }
 			  return angle_a < angle_b;
 		  });
 
-	point_vector hull;
+	std::vector<Point> hull;
 	hull.push_back(sorted_points[0]);
 	hull.push_back(sorted_points[1]);
 
@@ -170,10 +169,10 @@ point_vector graham_scan(const point_vector &points)
 			const auto &p2 = hull[hull.size() - 1];
 			const auto &p3 = sorted_points[i];
 
-			int v1x = p2.first - p1.first;
-			int v1y = p2.second - p1.second;
-			int v2x = p3.first - p2.first;
-			int v2y = p3.second - p2.second;
+			int v1x = p2.x - p1.x;
+			int v1y = p2.y - p1.y;
+			int v2x = p3.x - p2.x;
+			int v2y = p3.y - p2.y;
 
 			int cross = v1x * v2y - v1y * v2x;
 
@@ -189,35 +188,32 @@ point_vector graham_scan(const point_vector &points)
 	return hull;
 }
 
-color_point_vector get_convex_hull_points(const point_vector &vertices)
+std::vector<Point> get_convex_hull_points(const std::vector<Point> &vertices)
 {
-	color_point_vector hull_points;
+	std::vector<Point> hull_points;
 
 	if (vertices.size() < 3) {
 		return hull_points;
 	}
 
-	point_vector hull = jarvis_march(vertices);
+	std::vector<Point> hull = jarvis_march(vertices);
 
-	for (const auto &point : hull) {
-		hull_points.push_back(
-			std::make_tuple(point.first, point.second, 0.0));
+	for (const auto &p : hull) {
+		hull_points.push_back({ p.x, p.y, 0.0, 0 });
 	}
 
 	return hull_points;
 }
 
-color_point_vector draw_convex_polygon(point_vector vertices)
+std::vector<Point> draw_convex_polygon(std::vector<Point> vertices)
 {
-	color_point_vector all_points;
+	std::vector<Point> all_points;
 
 	if (vertices.size() < 3) {
 		return all_points;
 	}
 
 	if (!is_convex(vertices)) {
-		// std::cout << "Polygon is not convex! Elimiting uncovex points...\n";
-
 		vertices = graham_scan(vertices);
 	}
 
@@ -225,9 +221,7 @@ color_point_vector draw_convex_polygon(point_vector vertices)
 		const auto &current = vertices[i];
 		const auto &next = vertices[(i + 1) % vertices.size()];
 
-		std::vector<std::tuple<int, int, double> > line_points =
-			draw_cda(current.first, current.second, next.first,
-				 next.second);
+		std::vector<Point> line_points = draw_cda(current, next);
 
 		all_points.insert(all_points.end(), line_points.begin(),
 				  line_points.end());

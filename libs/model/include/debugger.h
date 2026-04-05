@@ -1,27 +1,30 @@
 #pragma once
 #include "canvas.h"
-#include "vars.h"
+#include "figure_class.h"
+namespace AlgorithmicEditor
+{
+class Debugger
+{
+  public:
+    Debugger(Canvas *canvas = nullptr, bool debug_mode = false, int step = 0);
+    ~Debugger();
 
-class Debugger {
+    void set_debug(bool debug);
+    void set_canvas(Canvas *canvas);
+    void set_figure(Figure *figure);
 
-public:
-  Debugger(Canvas *canvas = nullptr, bool debug_m = false, int step = 0);
-  ~Debugger();
+    bool get_debug() const;
+    const Canvas *get_canvas() const;
 
-  void set_debug(bool debug);
-  void set_canvas(Canvas *cnvs);
-  void set_figure(Figure fig);
+    void reset();
+    void clear_canvas();
+    bool step();
+    void begin_debug();
 
-  bool get_debug() const;
-  Canvas *get_canvas();
-
-  bool step();
-  void reset();
-  void begin_debug();
-
-private:
-  bool debug_mode;
-  Canvas *canvas;
-  Figure fig;
-  int step_i;
+  private:
+    bool debug_mode;
+    Canvas *canvas;
+    Figure *figure;
+    int step_i;
 };
+} // namespace AlgorithmicEditor
