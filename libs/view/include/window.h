@@ -33,5 +33,9 @@ class MainWindow : public QMainWindow
     void add_toolbar_algorithm_button(QToolBar *toolbar, QString &&text,
                                       QString &&tool_tip,
                                       std::vector<GType> data);
+    void init_working_area();
+    void init_menu_bar();
+    void init_toolbars();
+    void setup_shortcuts();
 };
 } // namespace AlgorithmicEditor

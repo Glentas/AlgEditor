@@ -43,6 +43,21 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     this->setMinimumWidth(Config::MIN_WINDOW_WIDTH);
     this->setMinimumHeight(Config::MIN_WINDOW_HEIGHT);
 
+    this->init_working_area();
+
+    this->debugger = std::make_unique<Debugger>(this->canvas.get());
+    this->data_handler = std::make_unique<DataHandler>(this->debugger.get());
+    this->data_handler->set_figure(std::make_unique<CDAFigure>());
+
+    this->init_menu_bar();
+    this->init_toolbars();
+    this->setup_shortcuts();
+}
+
+MainWindow::~MainWindow() { std::cout << "Window out...\n"; }
+
+void MainWindow::init_working_area()
+{
     // Init working area
     // The very "parent" widget
     QWidget *central = new QWidget(this);
@@ -58,9 +73,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     scroll_area->setWidgetResizable(false);
 
     this->canvas = std::make_unique<Canvas>(scroll_area);
-    this->debugger = std::make_unique<Debugger>(this->canvas.get());
-    this->data_handler = std::make_unique<DataHandler>(this->debugger.get());
-    this->data_handler->set_figure(std::make_unique<CDAFigure>());
 
     this->connect(this->canvas.get(), &Canvas::click_on_pixel, this,
                   &MainWindow::on_click_on_pixel);
@@ -74,7 +86,10 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     frame_layout->addWidget(scroll_area);
 
     main_view->addWidget(border_frame);
+}
 
+void MainWindow::init_menu_bar()
+{
     // Init menu bar
     QMenu *file_menu = this->menuBar()->addMenu("Info");
     QMenu *settings_menu = this->menuBar()->addMenu("Settings");
@@ -103,7 +118,10 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
     settings_menu->addAction(active_figure_setting);
     settings_menu->addAction(grid_show_setting);
+}
 
+void MainWindow::init_toolbars()
+{
     // Init toolbar
     QToolBar *tools_toolbar = this->addToolBar("Tools");
     tools_toolbar->addSeparator();
@@ -160,7 +178,10 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     this->add_toolbar_algorithm_button(algorithms_toolbar, "Polygonalisation",
                                        "Various polygonalisation algorithms",
                                        {GType::Delaunay, GType::Voronoi});
+}
 
+void MainWindow::setup_shortcuts()
+{
     // Setup shortcuts
 
     // Increase cell size
@@ -205,14 +226,12 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
                   [this]() { this->data_handler->finish_and_draw(); });
 }
 
-MainWindow::~MainWindow() { std::cout << "Window out...\n"; }
-
 void MainWindow::on_info()
 {
     QMessageBox::information(this, "About",
                              "Awesome Editor created by AniGleb (feat. Owerk)\n"
                              "C++ and Qt6.10.2\n"
-                             "Version 0.31-alpha\n"
+                             "Version 0.32-alpha\n"
                              "2026");
 }
 
