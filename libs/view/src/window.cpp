@@ -23,6 +23,7 @@
 #include <QPushButton>
 #include <QScrollArea>
 #include <QShortcut>
+#include <QString>
 #include <QTimer>
 #include <QToolBar>
 #include <QToolButton>
@@ -57,6 +58,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     scroll_area->setWidgetResizable(false);
 
     this->canvas = std::make_unique<Canvas>(scroll_area);
+    this->debugger = std::make_unique<Debugger>(this->canvas.get());
+    this->data_handler = std::make_unique<DataHandler>(this->debugger.get());
+    this->data_handler->set_figure(std::make_unique<CDAFigure>());
 
     this->connect(this->canvas.get(), &Canvas::click_on_pixel, this,
                   &MainWindow::on_click_on_pixel);
@@ -70,9 +74,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     frame_layout->addWidget(scroll_area);
 
     main_view->addWidget(border_frame);
-
-    this->debugger = std::make_unique<Debugger>(this->canvas.get());
-    this->data_handler = std::make_unique<DataHandler>(this->debugger.get());
 
     // Init menu bar
     QMenu *file_menu = this->menuBar()->addMenu("Info");
@@ -90,10 +91,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     this->connect(active_figure_setting, &QAction::triggered, this,
                   &MainWindow::on_show_figures_dialog);
 
-    QAction *grid_size_setting = new QAction("Cell size", this);
-    this->connect(grid_size_setting, &QAction::triggered, this,
-                  &MainWindow::on_size_update);
-
     QAction *grid_show_setting = new QAction("Show grid", this);
     grid_show_setting->setCheckable(true);
     grid_show_setting->setChecked(true);
@@ -105,289 +102,19 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     file_menu->addAction(program_about);
 
     settings_menu->addAction(active_figure_setting);
-    settings_menu->addAction(grid_size_setting);
     settings_menu->addAction(grid_show_setting);
 
     // Init toolbar
-    QToolBar *tool_bar = this->addToolBar("Tools");
-    tool_bar->addSeparator();
+    QToolBar *tools_toolbar = this->addToolBar("Tools");
+    tools_toolbar->addSeparator();
 
-    // set misc buttons
-    QToolButton *clear_canvas_btn = new QToolButton(tool_bar);
+    // Setup misc buttons
+    QToolButton *clear_canvas_btn = new QToolButton(tools_toolbar);
     clear_canvas_btn->setText("Clear");
     clear_canvas_btn->setToolTip(
         "Clears workspace by filling it with white color");
     clear_canvas_btn->setMaximumWidth(4 * Config::CELL_SIZE);
-
-    QCheckBox *debug_checkbox = new QCheckBox("Debug", tool_bar);
-    debug_checkbox->setToolTip("Debug mode");
-    debug_checkbox->setChecked(false);
-
-    QToolButton *debug_step_btn = new QToolButton(tool_bar);
-    debug_step_btn->setText(">");
-    debug_step_btn->setEnabled(false);
-
-    QToolButton *debug_stop_btn = new QToolButton(tool_bar);
-    debug_stop_btn->setText("x");
-    debug_stop_btn->setEnabled(false);
-
-    // button with popup, goddamn
-    QToolButton *frl_btn = new QToolButton(tool_bar);
-    frl_btn->setText("FRLine");
-    frl_btn->setToolTip("Various first rank line drawing algorithms");
-    frl_btn->setMaximumWidth(4 * Config::CELL_SIZE);
-
-    QMenu *frl_menu = new QMenu(frl_btn);
-    frl_menu->addAction("CDA")->setData(static_cast<int>(GType::CDA));
-    frl_menu->addAction("Bresenham")
-        ->setData(static_cast<int>(GType::Bresenham));
-    frl_menu->addAction("Wu")->setData(static_cast<int>(GType::Wu));
-
-    frl_btn->setMenu(frl_menu);
-    frl_btn->setPopupMode(QToolButton::InstantPopup);
-    //
-
-    // button with popup, goddamn x2
-    QToolButton *srl_btn = new QToolButton(tool_bar);
-    srl_btn->setText("SRLine");
-    srl_btn->setToolTip("Various second rank line drawing algorithms");
-    srl_btn->setMaximumWidth(4 * Config::CELL_SIZE);
-
-    QMenu *srl_menu = new QMenu(srl_btn);
-    srl_menu->addAction("Circle")->setData(static_cast<int>(GType::Circle));
-    srl_menu->addAction("Elipsis")->setData(static_cast<int>(GType::Ellipse));
-    srl_menu->addAction("Parabola")->setData(static_cast<int>(GType::Parabola));
-    srl_menu->addAction("Hyperbola")
-        ->setData(static_cast<int>(GType::Hyperbola));
-
-    srl_btn->setMenu(srl_menu);
-    srl_btn->setPopupMode(QToolButton::InstantPopup);
-    //
-
-    // button with popup, goddamn x3
-    QToolButton *interpolation_btn = new QToolButton(tool_bar);
-    interpolation_btn->setText("ARLine");
-    interpolation_btn->setToolTip("Various interpolation algorithms");
-    interpolation_btn->setMaximumWidth(4 * Config::CELL_SIZE);
-
-    QMenu *interplation_menu = new QMenu(interpolation_btn);
-    interplation_menu->addAction("Hermite")->setData(
-        static_cast<int>(GType::Hermite));
-    interplation_menu->addAction("Bezier")->setData(
-        static_cast<int>(GType::Bezier));
-    interplation_menu->addAction("BSpline")->setData(
-        static_cast<int>(GType::BSpline));
-
-    interpolation_btn->setMenu(interplation_menu);
-    interpolation_btn->setPopupMode(QToolButton::InstantPopup);
-    //
-
-    // button with popup, goddamn x4
-    QToolButton *btn_3D = new QToolButton(tool_bar);
-    btn_3D->setText("3D");
-    btn_3D->setToolTip("3D figures");
-    btn_3D->setMaximumWidth(4 * Config::CELL_SIZE);
-
-    QMenu *menu_3D = new QMenu(btn_3D);
-    menu_3D->addAction("Cube")->setData(static_cast<int>(GType::Cube));
-    menu_3D->addAction("Tetrahedron")
-        ->setData(static_cast<int>(GType::Tetrahedron));
-
-    btn_3D->setMenu(menu_3D);
-    btn_3D->setPopupMode(QToolButton::InstantPopup);
-    //
-
-    // button with popup, goddamn x5
-    QToolButton *btn_polygon = new QToolButton(tool_bar);
-    btn_polygon->setText("Polygon");
-    btn_polygon->setToolTip("Various polygon types");
-    btn_polygon->setMaximumWidth(4 * Config::CELL_SIZE);
-
-    QMenu *menu_polygon = new QMenu(btn_polygon);
-    menu_polygon->addAction("Polygon")->setData(
-        static_cast<int>(GType::Polygon));
-    menu_polygon->addAction("Convex polygon")
-        ->setData(static_cast<int>(GType::ConvexPolygon));
-
-    btn_polygon->setMenu(menu_polygon);
-    btn_polygon->setPopupMode(QToolButton::InstantPopup);
-    //
-
-    // button with popup, goddamn x7
-    QToolButton *btn_polygonalisation = new QToolButton(tool_bar);
-    btn_polygonalisation->setText("PolyFill");
-    btn_polygonalisation->setToolTip("Delone and Voronoi algorithms");
-    btn_polygonalisation->setMaximumWidth(4 * Config::CELL_SIZE);
-
-    QMenu *menu_polygonalisation = new QMenu(btn_polygonalisation);
-
-    menu_polygonalisation->addAction("Delone")->setData(
-        static_cast<int>(GType::Delaunay));
-    menu_polygonalisation->addAction("Voronoi")->setData(
-        static_cast<int>(GType::Voronoi));
-
-    btn_polygonalisation->setMenu(menu_polygonalisation);
-    btn_polygonalisation->setPopupMode(QToolButton::InstantPopup);
-    //
-
-    tool_bar->addWidget(frl_btn);
-    this->connect(frl_menu, &QMenu::triggered, this, [this](QAction *act) {
-        GType type = static_cast<GType>(act->data().toInt());
-        switch (type) {
-        case GType::CDA: {
-            std::unique_ptr<CDAFigure> figure = std::make_unique<CDAFigure>();
-            this->data_handler->set_figure(std::move(figure));
-            break;
-        }
-        case GType::Bresenham: {
-            std::unique_ptr<BresenhamFigure> figure =
-                std::make_unique<BresenhamFigure>();
-            this->data_handler->set_figure(std::move(figure));
-            break;
-        }
-        case GType::Wu: {
-            std::unique_ptr<WuFigure> figure = std::make_unique<WuFigure>();
-            this->data_handler->set_figure(std::move(figure));
-            break;
-        }
-        default: {
-            break;
-        }
-        }
-    });
-
-    tool_bar->addWidget(srl_btn);
-    this->connect(srl_menu, &QMenu::triggered, this, [this](QAction *act) {
-        GType type = static_cast<GType>(act->data().toInt());
-        switch (type) {
-        case GType::Circle: {
-            std::unique_ptr<CircleFigure> figure =
-                std::make_unique<CircleFigure>();
-            this->data_handler->set_figure(std::move(figure));
-            break;
-        }
-        case GType::Ellipse: {
-            std::unique_ptr<EllipseFigure> figure =
-                std::make_unique<EllipseFigure>();
-            this->data_handler->set_figure(std::move(figure));
-            break;
-        }
-        case GType::Parabola: {
-            std::unique_ptr<ParabolaFigure> figure =
-                std::make_unique<ParabolaFigure>();
-            this->data_handler->set_figure(std::move(figure));
-            break;
-        }
-        case GType::Hyperbola: {
-            std::unique_ptr<HyperbolaFigure> figure =
-                std::make_unique<HyperbolaFigure>();
-            this->data_handler->set_figure(std::move(figure));
-            break;
-        }
-        default: {
-            break;
-        }
-        }
-    });
-
-    tool_bar->addWidget(interpolation_btn);
-    this->connect(interplation_menu, &QMenu::triggered, this,
-                  [this](QAction *act) {
-                      GType type = static_cast<GType>(act->data().toInt());
-                      switch (type) {
-                      case GType::Hermite: {
-                          std::unique_ptr<HermiteFigure> figure =
-                              std::make_unique<HermiteFigure>();
-                          this->data_handler->set_figure(std::move(figure));
-                          break;
-                      }
-                      case GType::Bezier: {
-                          std::unique_ptr<BezierFigure> figure =
-                              std::make_unique<BezierFigure>();
-                          this->data_handler->set_figure(std::move(figure));
-                          break;
-                      }
-                      case GType::BSpline: {
-                          std::unique_ptr<BSplineFigure> figure =
-                              std::make_unique<BSplineFigure>();
-                          this->data_handler->set_figure(std::move(figure));
-                          break;
-                      }
-                      default: {
-                          break;
-                      }
-                      }
-                  });
-
-    tool_bar->addWidget(btn_3D);
-    this->connect(menu_3D, &QMenu::triggered, this, [this](QAction *act) {
-        GType type = static_cast<GType>(act->data().toInt());
-        switch (type) {
-        case GType::Cube: {
-            std::unique_ptr<CubeFigure> figure = std::make_unique<CubeFigure>();
-            this->data_handler->set_figure(std::move(figure));
-            break;
-        }
-        case GType::Tetrahedron: {
-            std::unique_ptr<TetrahedronFigure> figure =
-                std::make_unique<TetrahedronFigure>();
-            this->data_handler->set_figure(std::move(figure));
-            break;
-        }
-        default: {
-            break;
-        }
-        }
-    });
-
-    tool_bar->addWidget(btn_polygon);
-    this->connect(menu_polygon, &QMenu::triggered, this, [this](QAction *act) {
-        GType type = static_cast<GType>(act->data().toInt());
-        switch (type) {
-        case GType::Polygon: {
-            std::unique_ptr<PolygonFigure> figure =
-                std::make_unique<PolygonFigure>();
-            this->data_handler->set_figure(std::move(figure));
-            break;
-        }
-        case GType::ConvexPolygon: {
-            std::unique_ptr<ConvexPolygonFigure> figure =
-                std::make_unique<ConvexPolygonFigure>();
-            this->data_handler->set_figure(std::move(figure));
-            break;
-        }
-
-        default: {
-            break;
-        }
-        }
-    });
-
-    tool_bar->addWidget(btn_polygonalisation);
-    this->connect(menu_polygonalisation, &QMenu::triggered, this,
-                  [this](QAction *act) {
-                      GType type = static_cast<GType>(act->data().toInt());
-                      switch (type) {
-                      case GType::Delaunay: {
-                          std::unique_ptr<DelaunayFigure> figure =
-                              std::make_unique<DelaunayFigure>();
-                          this->data_handler->set_figure(std::move(figure));
-                          break;
-                      }
-                      case GType::Voronoi: {
-                          std::unique_ptr<VoronoiFigure> figure =
-                              std::make_unique<VoronoiFigure>();
-                          this->data_handler->set_figure(std::move(figure));
-                          break;
-                      }
-                      default: {
-                          break;
-                      }
-                      }
-                  });
-
-    // misc buttons
-    tool_bar->addWidget(clear_canvas_btn);
+    tools_toolbar->addWidget(clear_canvas_btn);
     this->connect(clear_canvas_btn, &QToolButton::clicked, this, [this]() {
         this->canvas->on_clear();
         bool d = this->debugger->get_debug();
@@ -396,46 +123,54 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
         this->debugger->set_debug(d);
     });
 
-    tool_bar->addWidget(debug_checkbox);
+    QCheckBox *debug_checkbox = new QCheckBox("Debug", tools_toolbar);
+    debug_checkbox->setToolTip("Debug mode");
+    debug_checkbox->setChecked(false);
+    tools_toolbar->addWidget(debug_checkbox);
     this->connect(debug_checkbox, &QCheckBox::toggled, this,
                   [this](bool checked) {
                       if (checked) {
-                          qDebug() << "Debug ON";
                           this->debugger->reset();
                           this->debugger->set_debug(true);
                       } else {
-                          qDebug() << "Debug OFF";
                           this->debugger->set_debug(false);
                           this->debugger->begin_debug();
                       }
                   });
 
-    tool_bar->addWidget(debug_step_btn);
-    this->connect(debug_checkbox, &QCheckBox::toggled, debug_step_btn,
-                  &QToolButton::setEnabled);
-    this->connect(debug_step_btn, &QToolButton::clicked, this,
-                  [this]() { this->debugger->begin_debug(); });
+    QToolBar *algorithms_toolbar = this->addToolBar("Algorithms");
+    algorithms_toolbar->addSeparator();
 
-    tool_bar->addWidget(debug_stop_btn);
-    this->connect(debug_checkbox, &QCheckBox::toggled, debug_stop_btn,
-                  &QToolButton::setEnabled);
-    this->connect(debug_stop_btn, &QToolButton::clicked, this, [this]() {
-        bool d = this->debugger->get_debug();
-        this->debugger->set_debug(false);
-        this->debugger->begin_debug();
-        this->debugger->set_debug(d);
-    });
+    this->add_toolbar_algorithm_button(
+        algorithms_toolbar, "FRLine",
+        "Various first rank line drawing algorithms",
+        {GType::CDA, GType::Bresenham, GType::Wu});
+    this->add_toolbar_algorithm_button(
+        algorithms_toolbar, "SRLine",
+        "Various second rank line drawing algorithms",
+        {GType::Circle, GType::Ellipse, GType::Parabola, GType::Hyperbola});
+    this->add_toolbar_algorithm_button(
+        algorithms_toolbar, "Interpolation", "Various interpolation algorithms",
+        {GType::Hermite, GType::Bezier, GType::BSpline});
+    this->add_toolbar_algorithm_button(algorithms_toolbar, "3D", "3D figures",
+                                       {GType::Cube, GType::Tetrahedron});
+    this->add_toolbar_algorithm_button(algorithms_toolbar, "Polygon",
+                                       "Various polygon drawing algorithms",
+                                       {GType::Polygon, GType::ConvexPolygon});
+    this->add_toolbar_algorithm_button(algorithms_toolbar, "Polygonalisation",
+                                       "Various polygonalisation algorithms",
+                                       {GType::Delaunay, GType::Voronoi});
 
-    // setup shortcuts
+    // Setup shortcuts
 
-    // increase cell size
+    // Increase cell size
     new QShortcut(QKeySequence("+"), this, [this]() {
         int sz = this->canvas->get_pixel_size();
         sz++;
         canvas->set_pixel_size(sz);
     });
 
-    // decrease cell size
+    // Decrease cell size
     new QShortcut(QKeySequence("-"), this, [this]() {
         int sz = canvas->get_pixel_size();
         sz--;
@@ -475,10 +210,9 @@ MainWindow::~MainWindow() { std::cout << "Window out...\n"; }
 void MainWindow::on_info()
 {
     QMessageBox::information(this, "About",
-                             "Awesome Editor created by Owerk and Glentas (and "
-                             "Qwen)\n"
+                             "Awesome Editor created by AniGleb (feat. Owerk)\n"
                              "C++ and Qt6.10.2\n"
-                             "Version 2.3\n"
+                             "Version 0.31-alpha\n"
                              "2026");
 }
 
@@ -498,24 +232,9 @@ void MainWindow::on_help()
                              "arrows - move figure\n");
 }
 
-// connecting user clicks, in order to calculate when to launch algorithms
 void MainWindow::on_click_on_pixel(Point px)
 {
     this->data_handler->add_point(px);
-}
-
-void MainWindow::on_size_update()
-{
-    bool ok;
-    QString *max_size = new QString();
-    max_size->assign("Size (1 - " + std::to_string(2 * Config::CELL_SIZE) +
-                     "):");
-
-    int n = QInputDialog::getInt(this, "Size of a grid cell", *max_size, 1, 1,
-                                 2 * Config::CELL_SIZE, 1, &ok);
-    if (ok) {
-        this->canvas->set_pixel_size(n);
-    }
 }
 
 void MainWindow::on_show_figures_dialog()
@@ -531,9 +250,10 @@ void MainWindow::on_show_figures_dialog()
     list_widget->setSelectionMode(QAbstractItemView::SingleSelection);
 
     for (const auto &fig : this->data_handler->get_figures()) {
-        QString item_text = QString("%1 %2")
-                                .arg(gtype_to_string(fig->get_figure_type()))
-                                .arg(fig->get_id());
+        QString item_text =
+            QString("%1 %2")
+                .arg(Tools::gtype_to_string(fig->get_figure_type()))
+                .arg(fig->get_id());
         list_widget->addItem(item_text);
     }
 
@@ -549,8 +269,33 @@ void MainWindow::on_show_figures_dialog()
         int row = list_widget->currentRow();
         if (row >= 0 && row < this->data_handler->get_figures().size()) {
             this->data_handler->set_current_active_idx(row);
-            this->data_handler->set_previous_active_idx(row);
         }
     }
+}
+
+void MainWindow::add_toolbar_algorithm_button(QToolBar *toolbar, QString &&text,
+                                              QString &&tool_tip,
+                                              std::vector<GType> data)
+{
+    QToolButton *button = new QToolButton(toolbar);
+    button->setText(text);
+    button->setToolTip(tool_tip);
+    button->setMaximumWidth(4 * Config::CELL_SIZE);
+
+    QMenu *menu = new QMenu(button);
+
+    for (auto type : data) {
+        menu->addAction(QString::fromStdString(Tools::gtype_to_string(type)))
+            ->setData(static_cast<int>(type));
+    }
+
+    button->setMenu(menu);
+    button->setPopupMode(QToolButton::InstantPopup);
+
+    toolbar->addWidget(button);
+    this->connect(menu, &QMenu::triggered, this, [this](QAction *act) {
+        GType type = static_cast<GType>(act->data().toInt());
+        this->data_handler->set_figure(Tools::get_figure_object_by_type(type));
+    });
 }
 } // namespace AlgorithmicEditor

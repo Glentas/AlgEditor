@@ -308,20 +308,20 @@ void CubeFigure::connect_figure_points(std::vector<Point> &cache_points) const
     if (this->get_points().size() == 8) {
         const std::vector<Point> &pts = this->get_points();
 
-        append<Point>(cache_points, draw_cda(pts[0], pts[1]));
-        append<Point>(cache_points, draw_cda(pts[1], pts[2]));
-        append<Point>(cache_points, draw_cda(pts[2], pts[3]));
-        append<Point>(cache_points, draw_cda(pts[3], pts[0]));
+        Tools::append<Point>(cache_points, draw_cda(pts[0], pts[1]));
+        Tools::append<Point>(cache_points, draw_cda(pts[1], pts[2]));
+        Tools::append<Point>(cache_points, draw_cda(pts[2], pts[3]));
+        Tools::append<Point>(cache_points, draw_cda(pts[3], pts[0]));
 
-        append<Point>(cache_points, draw_cda(pts[4], pts[5]));
-        append<Point>(cache_points, draw_cda(pts[5], pts[6]));
-        append<Point>(cache_points, draw_cda(pts[6], pts[7]));
-        append<Point>(cache_points, draw_cda(pts[7], pts[4]));
+        Tools::append<Point>(cache_points, draw_cda(pts[4], pts[5]));
+        Tools::append<Point>(cache_points, draw_cda(pts[5], pts[6]));
+        Tools::append<Point>(cache_points, draw_cda(pts[6], pts[7]));
+        Tools::append<Point>(cache_points, draw_cda(pts[7], pts[4]));
 
-        append<Point>(cache_points, draw_cda(pts[0], pts[4]));
-        append<Point>(cache_points, draw_cda(pts[1], pts[5]));
-        append<Point>(cache_points, draw_cda(pts[2], pts[6]));
-        append<Point>(cache_points, draw_cda(pts[3], pts[7]));
+        Tools::append<Point>(cache_points, draw_cda(pts[0], pts[4]));
+        Tools::append<Point>(cache_points, draw_cda(pts[1], pts[5]));
+        Tools::append<Point>(cache_points, draw_cda(pts[2], pts[6]));
+        Tools::append<Point>(cache_points, draw_cda(pts[3], pts[7]));
     }
 }
 bool CubeFigure::add_and_validate_point(const Point &pt)
@@ -368,13 +368,13 @@ void TetrahedronFigure::connect_figure_points(
     if (this->get_points().size() == 4) {
         const std::vector<Point> &pts = this->get_points();
 
-        append<Point>(cache_points, draw_cda(pts[0], pts[1]));
-        append<Point>(cache_points, draw_cda(pts[1], pts[2]));
-        append<Point>(cache_points, draw_cda(pts[2], pts[0]));
+        Tools::append<Point>(cache_points, draw_cda(pts[0], pts[1]));
+        Tools::append<Point>(cache_points, draw_cda(pts[1], pts[2]));
+        Tools::append<Point>(cache_points, draw_cda(pts[2], pts[0]));
 
-        append<Point>(cache_points, draw_cda(pts[0], pts[3]));
-        append<Point>(cache_points, draw_cda(pts[1], pts[3]));
-        append<Point>(cache_points, draw_cda(pts[2], pts[3]));
+        Tools::append<Point>(cache_points, draw_cda(pts[0], pts[3]));
+        Tools::append<Point>(cache_points, draw_cda(pts[1], pts[3]));
+        Tools::append<Point>(cache_points, draw_cda(pts[2], pts[3]));
     }
 }
 bool TetrahedronFigure::add_and_validate_point(const Point &pt)
@@ -424,11 +424,11 @@ void PolygonFigure::connect_figure_points(
         const std::vector<Point> &pts = this->get_points();
 
         for (int i = 0; i < pts.size() - 1; i++) {
-            append<Point>(cache_points, draw_cda(pts[i], pts[i + 1]));
+            Tools::append<Point>(cache_points, draw_cda(pts[i], pts[i + 1]));
         }
-        append<Point>(cache_points, draw_cda(
+        Tools::append<Point>(cache_points, draw_cda(
 
-                                        pts[pts.size() - 1], pts[0]));
+                                               pts[pts.size() - 1], pts[0]));
     }
 }
 bool PolygonFigure::add_and_validate_point(const Point &pt)

@@ -14,8 +14,7 @@
 namespace AlgorithmicEditor
 {
 DataHandler::DataHandler(Debugger *debugger)
-    : id_counter(0), current_active_idx(Config::CODE_ERROR),
-      previous_active_idx(Config::CODE_ERROR), debugger(debugger)
+    : id_counter(0), current_active_idx(Config::CODE_ERROR), debugger(debugger)
 {
 }
 
@@ -27,13 +26,6 @@ void DataHandler::set_current_active_idx(int idx)
         return;
     }
     this->current_active_idx = idx;
-}
-void DataHandler::set_previous_active_idx(int idx)
-{
-    if (idx < 0) {
-        return;
-    }
-    this->previous_active_idx = idx;
 }
 void DataHandler::set_figure(std::unique_ptr<Figure> figure)
 {
@@ -51,10 +43,6 @@ int DataHandler::get_current_active_idx() const
 {
     return this->current_active_idx;
 }
-int DataHandler::get_previous_active_idx() const
-{
-    return this->previous_active_idx;
-}
 const Figure *DataHandler::get_figure() const
 {
     return this->current_figure.get();
@@ -66,11 +54,21 @@ const std::vector<std::unique_ptr<Figure>> &DataHandler::get_figures() const
 
 void DataHandler::reset()
 {
+    std::unique_ptr<Figure> renewed_figure;
+
+    if (this->current_figure != nullptr) {
+        renewed_figure = this->current_figure->clone();
+        renewed_figure->clear();
+    }
+
     this->current_figure.reset();
     this->figures.clear();
     this->id_counter = 0;
     this->current_active_idx = Config::CODE_ERROR;
-    this->current_active_idx = Config::CODE_ERROR;
+
+    if (renewed_figure != nullptr) {
+        this->current_figure = std::move(renewed_figure);
+    }
 }
 
 void DataHandler::save_figure(std::unique_ptr<Figure> figure)
@@ -78,12 +76,16 @@ void DataHandler::save_figure(std::unique_ptr<Figure> figure)
     if (figure == nullptr) {
         return;
     }
+
     std::unique_ptr<Figure> renewed_figure = figure->clone();
+    // Don't need exact copy
     renewed_figure->clear();
+
     this->id_counter++;
     figure->set_id(this->id_counter);
     this->figures.push_back(std::move(figure));
     this->current_active_idx = this->figures.size() - 1;
+
     // To not select new figure every time
     this->current_figure = std::move(renewed_figure);
 }

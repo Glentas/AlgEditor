@@ -36,7 +36,6 @@ class DataHandler
   private:
     uint16_t id_counter;
     int current_active_idx;
-    int previous_active_idx;
     std::unique_ptr<Figure> current_figure;
     std::vector<std::unique_ptr<Figure>> figures;
     Debugger *debugger;
